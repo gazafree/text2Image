@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Image</title>
+</head>
+<body>
+
+<input type="text" id="text-input" placeholder="Enter text..." value="Hello, World! This is a long line that will hopefully wrap correctly in the canvas.">
+<button onclick="convertTextToImage()">Convert to Image</button>
+
+<br><br>
+<canvas id="textCanvas" style="border: 1px solid black;"></canvas>
+<br><br>
+<img id="resultImage" alt="Generated Image">
+
+<script>
+    function convertTextToImage() {
+        const canvas = document.getElementById('textCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas dimensions
+        canvas.width = 400;
+        canvas.height = 200;
+
+        const text = document.getElementById('text-input').value;
+
+        let fontSize = 30;  // Starting font size
+        ctx.font = fontSize + 'px Arial';
+
+        // Check if text height exceeds canvas height. Decrease font size iteratively until it fits.
+        while (getTextHeight(ctx, text, canvas.width) > canvas.height && fontSize > 10) {
+            fontSize--;
+            ctx.font = fontSize + 'px Arial';
+        }
+
+        // Clear the canvas after setting font
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Set other text properties
+        ctx.fillStyle = 'black';
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center';
+
+        // Draw text to canvas with wrapping
+        wrapText(ctx, text, canvas.width / 2, canvas.height / 2, canvas.width, fontSize + 5);
+
+        // Convert canvas to image and set it to the <img> tag
+        const image = document.getElementById('resultImage');
+        image.src = canvas.toDataURL('image/png');
+    }
+
+    function wrapText(context, text, x, y, maxWidth, lineHeight) {
+        let words = text.split(' ');
+        let line = '';
+        let lines = [];
+
+        for (let n = 0; n < words.length; n++) {
+            let testLine = line + words[n] + ' ';
+            let metrics = context.measureText(testLine);
+            let testWidth = metrics.width;
+            if (testWidth > maxWidth && n > 0) {
+                lines.push(line);
+                line = words[n] + ' ';
+            } else {
+                line = testLine;
+            }
+        }
+        lines.push(line);
+
+        let totalHeight = lines.length * lineHeight;
+        let startY = y - (totalHeight / 2) + (lineHeight / 2);  // Adjust to start drawing from the correct position
+
+        for(let i = 0; i < lines.length; i++) {
+            context.fillText(lines[i], x, startY + (i * lineHeight));
+        }
+    }
+
+    function getTextHeight(context, text, maxWidth) {
+        let words = text.split(' ');
+        let line = '';
+        let lines = [];
+
+        for (let n = 0; n < words.length; n++) {
+            let testLine = line + words[n] + ' ';
+            let metrics = context.measureText(testLine);
+            let testWidth = metrics.width;
+            if (testWidth > maxWidth && n > 0) {
+                lines.push(line);
+                line = words[n] + ' ';
+            } else {
+                line = testLine;
+            }
+        }
+        lines.push(line);
+
+        return lines.length * (parseInt(context.font) + 5);
+    }
+
+</script>
+
+</body>
+</html>
