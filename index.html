@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,7 +9,12 @@
 <body>
 
 <input type="text" id="text-input" placeholder="Enter text..." value="Hello, World! This is a long line that will hopefully wrap correctly in the canvas.">
+<label for="text-color">Text Color:</label>
+<input type="color" id="text-color" value="#000000">
+<label for="bg-color">Background Color:</label>
+<input type="color" id="bg-color" value="#FFFFFF">
 <button onclick="convertTextToImage()">Convert to Image</button>
+<button onclick="downloadImage()">Download Image</button>
 
 <br><br>
 <canvas id="textCanvas" style="border: 1px solid black;"></canvas>
@@ -20,35 +26,45 @@
         const canvas = document.getElementById('textCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Set canvas dimensions
-        canvas.width = 400;
-        canvas.height = 200;
+        // Set canvas dimensions based on the screen size
+        canvas.width = window.innerWidth * 0.9;
+        canvas.height = window.innerHeight * 0.5;
 
         const text = document.getElementById('text-input').value;
 
-        let fontSize = 30;  // Starting font size
+        let fontSize = 30;
         ctx.font = fontSize + 'px Arial';
 
-        // Check if text height exceeds canvas height. Decrease font size iteratively until it fits.
         while (getTextHeight(ctx, text, canvas.width) > canvas.height && fontSize > 10) {
             fontSize--;
             ctx.font = fontSize + 'px Arial';
         }
 
-        // Clear the canvas after setting font
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Set the background color from the color picker
+        ctx.fillStyle = document.getElementById('bg-color').value;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Set other text properties
-        ctx.fillStyle = 'black';
+        // Set the text color from the color picker
+        ctx.fillStyle = document.getElementById('text-color').value;
+
         ctx.textBaseline = 'middle';
         ctx.textAlign = 'center';
 
-        // Draw text to canvas with wrapping
         wrapText(ctx, text, canvas.width / 2, canvas.height / 2, canvas.width, fontSize + 5);
 
-        // Convert canvas to image and set it to the <img> tag
         const image = document.getElementById('resultImage');
         image.src = canvas.toDataURL('image/png');
+    }
+
+
+    function downloadImage() {
+        const canvas = document.getElementById('textCanvas');
+        const downloadLink = document.createElement('a');
+        downloadLink.href = canvas.toDataURL('image/png');
+        downloadLink.download = 'generated-image.png';
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
     }
 
     function wrapText(context, text, x, y, maxWidth, lineHeight) {
